@@ -53,11 +53,40 @@ window.addEventListener("load", () => {
   updatePage();
 });
 
+let debounceTimer;
 document.addEventListener("selectionchange", function () {
+  clearTimeout(debounceTimer);
   const selection = window.getSelection();
-  if (selection.type !== "Range") {
-    return;
+  if (selection.type === "Range") {
+    debounceTimer = setTimeout(() => {
+      console.log(selection.anchorNode.parentNode.textContent);
+    }, 300); // 300ミリ秒後に実行
   }
-  const selectedNode = selection.anchorNode;
-  console.log(selectedNode.nodeValue);
+  //   if (selection.type !== "Range") {
+  //     return;
+  //   }
+  //   if (selection.anchorNode === selection.focusNode) {
+  //     console.log(selection.anchorNode.nodeValue);
+  //   } else {
+  //     if (
+  //       selection.anchorNode.compareDocumentPosition(selection.focusNode) &
+  //       Node.DOCUMENT_POSITION_PRECEDING
+  //     ) {
+  //       let currentNode = selection.focusNode;
+  //       let sentence = "";
+  //       while (currentNode !== selection.anchorNode) {
+  //         sentence += currentNode.nodeValue;
+  //         currentNode = currentNode.;
+  //       }
+  //       console.log(sentence);
+  //     } else {
+  //       let currentNode = selection.anchorNode;
+  //       let sentence = "";
+  //       while (currentNode !== selection.focusNode) {
+  //         sentence += currentNode.nodeValue;
+  //         currentNode = currentNode.nextSibling;
+  //       }
+  //       console.log(sentence);
+  //     }
+  //   }
 });
