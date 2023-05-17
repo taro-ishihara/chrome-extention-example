@@ -51,15 +51,13 @@ const addDescription = (node, word, description, star) => {
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  const selection = window.getSelection();
   switch (request.message) {
     case "getSelected":
-      if (selection.rangeCount > 0) {
-        sendResponse({
-          word: selection.toString().toLowerCase(),
-          context: selection.anchorNode.parentNode.textContent,
-        });
-      }
+      const selection = window.getSelection();
+      sendResponse({
+        word: selection.toString().toLowerCase(),
+        context: selection.anchorNode.parentNode.textContent,
+      });
       break;
     case "addDescriptions":
       const targetNodes = [...getTargetNodes(request.payload.word)];
