@@ -2,6 +2,8 @@ import { useState, ChangeEvent, useEffect } from "react";
 import { debounce } from "lodash";
 import { exportToQuizlet } from "./export-to-quizlet";
 import {
+  Text,
+  Box,
   Heading,
   InputGroup,
   InputRightElement,
@@ -15,15 +17,13 @@ import {
   Th,
   Td,
   TableContainer,
-  CloseButton
+  CloseButton,
 } from "@chakra-ui/react";
 import "./App.css";
 
 function App() {
   const [apiKey, setApiKey] = useState("");
   const [dict, setDict] = useState({});
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -54,15 +54,7 @@ function App() {
   };
 
   const handleCopyClick = () => {
-    navigator.clipboard
-      .writeText(exportToQuizlet(dict))
-      .then(() => {
-        setCopySuccess(true);
-        setTimeout(() => setCopySuccess(false), 2000);
-      })
-      .catch((error) => {
-        console.error("Failed to copy text: ", error);
-      });
+    navigator.clipboard.writeText(exportToQuizlet(dict));
   };
 
   const handleDeleteClick = async () => {
@@ -71,9 +63,7 @@ function App() {
         "openAiApiKey"
       ];
       await chrome.storage.sync.clear();
-      setDeleteSuccess(true);
       await chrome.storage.sync.set({ openAiApiKey: apiKey });
-      setTimeout(() => setDeleteSuccess(false), 2000);
       setDict({});
     } catch (error) {
       console.log("Failed to delete dictionary: ", error);
@@ -84,59 +74,74 @@ function App() {
     setShow(!show);
   };
 
-  const deleteWord = async(word: string) => {
+  const deleteWord = async (word: string) => {
     await chrome.storage.sync.remove(word);
     const updatedDict: Record<string, any> = { ...dict };
     delete updatedDict[word];
-    setDict(updatedDict)
-  }
+    setDict(updatedDict);
+  };
 
   return (
     <div className="App">
-      <Heading>Learning Booster with AI</Heading>
-      <InputGroup size="md">
-        <Input
-          pr="4.5rem"
-          type={show ? "text" : "password"}
-          placeholder="OpenAI Secret API key"
-          onChange={handleApiKeyChange}
-          value={apiKey}
-        />
-        <InputRightElement width="4.5rem">
-          <Button h="1.75rem" size="sm" onClick={handleHideClick}>
-            {show ? "Hide" : "Show"}
-          </Button>
-        </InputRightElement>
-      </InputGroup>
-      <TableContainer>
-        <Table variant="simple">
-          <Thead>
-            <Tr>
-              <Th>単語・表現</Th>
-              <Th>説明</Th>
-              <Th></Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {Object.entries(dict).map(([key, value]) => (
-              <Tr key={key}>
-                <Td>{key}</Td>
-                <Td whiteSpace="normal">{String(value)}</Td>
-                <Td><CloseButton onClick={() => deleteWord(key)} /></Td>
+      <Box m={4}>
+        <Heading>言語学習サポートAI</Heading>
+        <InputGroup mt={2} size="md">
+          <Input
+            pr="4.5rem"
+            type={show ? "text" : "password"}
+            placeholder="OpenAI Secret API key"
+            onChange={handleApiKeyChange}
+            value={apiKey}
+          />
+          <InputRightElement width="4.5rem">
+            <Button h="1.75rem" size="sm" onClick={handleHideClick}>
+              {show ? "Hide" : "Show"}
+            </Button>
+          </InputRightElement>
+        </InputGroup>
+        <TableContainer mt={4}>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th></Th>
+                <Th>単語・表現</Th>
+                <Th>説明</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-      <ul></ul>
-      <Flex>
-        <Button colorScheme="teal" variant="solid" onClick={handleCopyClick}>
-          {copySuccess ? "コピー済" : "Quizlet形式でコピー"}
-        </Button>
-        <Button colorScheme="red" variant="outline" onClick={handleDeleteClick}>
-          {deleteSuccess ? "削除済" : "辞書を全て削除"}
-        </Button>
-      </Flex>
+            </Thead>
+            <Tbody>
+              {Object.entries(dict).map(([key, value]) => (
+                <Tr key={key}>
+                  <Td>
+                    <CloseButton onClick={() => deleteWord(key)} />
+                  </Td>
+                  <Td>{key}</Td>
+                  <Td maxWidth="360px">
+                    <Text>{String(value)}</Text>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </TableContainer>
+        <ul></ul>
+        <Flex mt={2}>
+          <Button
+            colorScheme="teal"
+            variant="solid"
+            mr={4}
+            onClick={handleCopyClick}
+          >
+            Quizlet形式でコピー
+          </Button>
+          <Button
+            colorScheme="red"
+            variant="outline"
+            onClick={handleDeleteClick}
+          >
+            辞書を全て削除
+          </Button>
+        </Flex>
+      </Box>
     </div>
   );
 }

@@ -54,6 +54,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.message) {
     case "getSelected":
       const selection = window.getSelection();
+      console.log(selection.toString())
       sendResponse({
         word: selection.toString().toLowerCase(),
         context: selection.anchorNode.parentNode.textContent,
@@ -78,6 +79,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 window.addEventListener("load", async () => {
   const items = await chrome.storage.sync.get(null);
+  delete items.openAiApiKey // APIキーは対象外
   for (const word in items) {
     const targetNodes = [...getTargetNodes(word)];
     for (const node of targetNodes) {

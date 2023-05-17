@@ -1,8 +1,20 @@
 const createPrompt = (word, context) => {
-  return `${context}という文章の中での${word}という単語または表現の意味を日本語で説明してください。`;
+  return `${context}という文章の中での「${word}」という単語または表現の意味を日本語で説明してください。`;
 };
 
 let isProcessing = false;
+const startProcessing = () => {
+  isProcessing = true
+  const details = {};
+  details.path = { 16: "icons/iconred16.png", 32: "icons/iconred32.png" };
+  chrome.action.setIcon(details);
+};
+const endProcessing = () => {
+  isProcessing = false;
+  const details = {};
+  details.path = { 16: "icons/icon16.png", 32: "icons/icon32.png" };
+  chrome.action.setIcon(details);
+};
 
 chrome.runtime.onInstalled.addListener((details) => {
   chrome.contextMenus.create({
@@ -18,7 +30,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
       if (isProcessing) {
         break;
       }
-      isProcessing = true;
+      startProcessing(tab.id);
       const apiUrl = "https://api.openai.com/v1/chat/completions";
       const apiKey = (await chrome.storage.sync.get("openAiApiKey"))[
         "openAiApiKey"
@@ -45,21 +57,26 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
           })
             .then((fetchResponse) => {
               fetchResponse.json().then((jsonData) => {
-                isProcessing = false;
-                chrome.tabs.sendMessage(tab.id, {
-                  message: "addDescriptions",
-                  payload: {
-                    word: selected.word,
-                    description: jsonData.choices[0].message.content.replace(
-                      /"/g,
-                      "'"
-                    ),
-                  },
-                });
+                endProcessing();
+                if (jsonData.hasOwnProperty("choices")) {
+                  chrome.tabs.sendMessage(tab.id, {
+                    message: "addDescriptions",
+                    payload: {
+                      word: selected.word,
+                      description: jsonData.choices[0].message.content.replace(
+                        /"/g,
+                        "'"
+                      ),
+                    },
+                  });
+                } else {
+                  console.error("レスポンスが不正です。", jsonData);
+                }
               });
             })
             .catch((error) => {
-              isProcessing = false;
+              console.error(error);
+              endProcessing();
             });
         }
       );
